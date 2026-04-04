@@ -1,11 +1,16 @@
 const std = @import("std");
-const utils = @import("utils.zig");
+const utils = @import("lib/utils.zig");
+const parse = @import("lib/parse.zig");
+const shell = @import("lib/shell.zig");
+
 const print = utils.print;
 const take_input = utils.take_input;
 const Io = std.Io;
+const Allocator = std.mem.Allocator;
 
 pub fn main(init: std.process.Init) !void {
-    const arena: std.mem.Allocator = init.arena.allocator();
+    const arena: Allocator = init.arena.allocator();
+    const gpa: Allocator = init.gpa;
 
     const args = try init.minimal.args.toSlice(arena);
     for (args) |arg| {
@@ -28,9 +33,21 @@ pub fn main(init: std.process.Init) !void {
         try print(stdout_writer, "> ", .{});
         const result = try take_input(stdin_reader);
         if(result) |val| {
-            if (std.mem.eql(u8, val, "exit")) {return;}
-            else {try print(stdout_writer, "{s}\n", .{val});}
-        }
+            var list = try parse.parse_command(gpa, val);
+            defer list.deinit(gpa);
+
+            if (std.mem.eql(u8, list.items[0], "exit")) {
+                break;
+            } else {
+                const run_result = shell.run_command(gpa, io, list.items) catch |err| {
+                    std.log.err("ERROR: {}\n", .{err});
+                    continue;
+                };
+                defer run_result.deinit();
+                try print(stdout_writer, "{s}\n", .{run_result.stdout});
+                try print(stdout_writer, "{s}\n", .{run_result.stderr});
+            }
+        } else try print(stdout_writer, "\n", .{});
     }
 
 }
