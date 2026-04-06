@@ -27,30 +27,34 @@ pub fn main(init: std.process.Init) !void {
     var stdin_file_reader = Io.File.Reader.init(.stdin(), io, &stdin_buffer);
     const stdin_reader = &stdin_file_reader.interface;
 
-    try print(stdout_writer, "hello world\n", .{});
-
     while (true) {
-        try print(stdout_writer, "> ", .{});
+        try print(stdout_writer, "\n> ", .{});
         const result = try take_input(stdin_reader);
-        if(result) |val| {
-            var list = try parse.parse_command(gpa, val);
-            defer list.deinit(gpa);
 
-            if(list.items.len < 1) {
-                continue;
-            }
-            if (std.mem.eql(u8, list.items[0], "exit")) {
-                break;
-            } else {
-                const run_result = shell.run_command(gpa, io, list.items) catch |err| {
-                    std.log.err("ERROR: {}\n", .{err});
+        var list = try parse.parse_command(gpa, result);
+        defer list.deinit(gpa);
+
+        if(list.items.len < 1) {
+            continue;
+        }
+
+        const builtin = parse.get_builtin(list.items[0]);
+        if(builtin) |bt| {
+            switch (bt) {
+                .exit => break,
+                else => {
+                    std.log.err("builtin command \"{s}\" is not implemented yet.", .{list.items[0]});
                     continue;
-                };
-                defer run_result.deinit();
-                try print(stdout_writer, "{s}\n", .{run_result.stdout});
-                try print(stdout_writer, "{s}\n", .{run_result.stderr});
+                },
             }
-        } else try print(stdout_writer, "\n", .{});
+        }
+        const run_result = shell.run_command(gpa, io, list.items) catch |err| {
+            std.log.err("{}\n", .{err});
+            continue;
+        };
+        defer run_result.deinit();
+        try print(stdout_writer, "{s}", .{run_result.stdout});
+        try print(stdout_writer, "{s}", .{run_result.stderr});
     }
 
 }
