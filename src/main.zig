@@ -36,6 +36,9 @@ pub fn main(init: std.process.Init) !void {
             var list = try parse.parse_command(gpa, val);
             defer list.deinit(gpa);
 
+            if(list.items.len < 1) {
+                continue;
+            }
             if (std.mem.eql(u8, list.items[0], "exit")) {
                 break;
             } else {
