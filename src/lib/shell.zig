@@ -5,33 +5,15 @@ const print = utils.print;
 const Io = std.Io;
 const Allocator = std.mem.Allocator;
 
-const Runner_Result = struct {
-    gpa: Allocator,
-    stderr: []u8,
-    stdout: []u8,
-    pub fn deinit (self: *const Runner_Result) void {
-        self.gpa.free(self.stdout);
-        self.gpa.free(self.stderr);
-    }
-};
-
-pub fn run_command(gpa: Allocator, io: Io, argv: []const []const u8) !Runner_Result {
-    const result = try std.process.run(gpa, io, .{ .argv = argv });
-    return .{
-        .gpa = gpa,
-        .stderr = result.stderr,
-        .stdout = result.stdout,
-    };
+pub fn run_command(io: Io, argv: []const []const u8) !void {
+    var child = try std.process.spawn(io, .{.argv = argv });
+    _ = try child.wait(io);
 }
 
 test "run_command" {
     const io = std.testing.io;
-    const gpa = std.testing.allocator;
     const argv = [_][]const u8{"ls", "-la"};
-    const result = try run_command(gpa, io, &argv);
-    defer result.deinit();
-    std.debug.print("{s}\n", .{result.stdout});
-    std.debug.print("{s}\n", .{result.stderr});
+    try run_command(io, &argv);
 }
 
 pub fn run_cd(io: Io, path: []const u8) !void {

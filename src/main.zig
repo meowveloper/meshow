@@ -48,9 +48,7 @@ pub fn main(init: std.process.Init) !void {
                     const path = if(bt_arg.len > 0) bt_arg[0] else environ_map.get("HOME");
                     if(path) |pt| {
                         shell.run_cd(io, pt) catch |err| {
-                            if(err != error.FileNotFound) {
-                                std.log.err("{}", .{err});
-                            }
+                            std.log.err("{}", .{err});
                         };
                     } else std.log.err("invalid path", .{});
                 },
@@ -60,13 +58,10 @@ pub fn main(init: std.process.Init) !void {
             }
             continue;
         }
-        const run_result = shell.run_command(gpa, io, list.items) catch |err| {
+        shell.run_command(io, list.items) catch |err| {
             std.log.err("{}\n", .{err});
             continue;
         };
-        defer run_result.deinit();
-        try print(stdout_writer, "{s}", .{run_result.stdout});
-        try print(stdout_writer, "{s}", .{run_result.stderr});
     }
 
 }
