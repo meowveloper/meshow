@@ -33,3 +33,7 @@ test "run_command" {
     std.debug.print("{s}\n", .{result.stdout});
     std.debug.print("{s}\n", .{result.stderr});
 }
+
+pub fn run_cd(io: Io, path: []const u8) !void {
+    try std.process.setCurrentPath(io, path);
+}

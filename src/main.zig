@@ -18,6 +18,7 @@ pub fn main(init: std.process.Init) !void {
     }
 
     const io = init.io;
+    const environ_map = init.environ_map;
 
     var stdout_buffer: [1024]u8 = undefined;
     var stdout_file_writer: Io.File.Writer = .init(.stdout(), io, &stdout_buffer);
@@ -40,13 +41,24 @@ pub fn main(init: std.process.Init) !void {
 
         const builtin = parse.get_builtin(list.items[0]);
         if(builtin) |bt| {
+            const bt_arg = list.items[1..];
             switch (bt) {
                 .exit => break,
+                .cd => {
+                    const path = if(bt_arg.len > 0) bt_arg[0] else environ_map.get("HOME");
+                    if(path) |pt| {
+                        shell.run_cd(io, pt) catch |err| {
+                            if(err != error.FileNotFound) {
+                                std.log.err("{}", .{err});
+                            }
+                        };
+                    } else std.log.err("invalid path", .{});
+                },
                 else => {
                     std.log.err("builtin command \"{s}\" is not implemented yet.", .{list.items[0]});
-                    continue;
                 },
             }
+            continue;
         }
         const run_result = shell.run_command(gpa, io, list.items) catch |err| {
             std.log.err("{}\n", .{err});

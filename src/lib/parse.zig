@@ -5,12 +5,13 @@ const Allocator = std.mem.Allocator;
 pub const Builtins = enum {
     cd,
     exit,
+    placeholder,
 };
 
 pub fn parse_command(gpa: Allocator, command: ?[]const u8) !std.ArrayList([]const u8) {
     var list = std.ArrayList([]const u8).empty;
     if(command) |cmd| {
-        var it = std.mem.tokenizeAny(u8, cmd, " ");
+        var it = std.mem.tokenizeAny(u8, cmd, " \n\r\t");
 
         while (it.next()) |word| {
             try list.append(gpa, word);
