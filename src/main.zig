@@ -45,12 +45,10 @@ pub fn main(init: std.process.Init) !void {
             switch (bt) {
                 .exit => break,
                 .cd => {
-                    const path = if(bt_arg.len > 0) bt_arg[0] else environ_map.get("HOME");
-                    if(path) |pt| {
-                        shell.run_cd(io, pt) catch |err| {
-                            std.log.err("{}", .{err});
-                        };
-                    } else std.log.err("invalid path", .{});
+                    const path = if(bt_arg.len > 0) bt_arg[0] else null;
+                    shell.run_cd(gpa, environ_map, io, path) catch |err| {
+                        std.log.err("{}", .{err});
+                    };
                 },
                 else => {
                     std.log.err("builtin command \"{s}\" is not implemented yet.", .{list.items[0]});
