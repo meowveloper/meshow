@@ -29,9 +29,13 @@ pub fn main(init: std.process.Init) !void {
     const stdin_reader = &stdin_file_reader.interface;
 
     while (true) {
-        try print(stdout_writer, "\n> ", .{});
-        const result = try take_input(stdin_reader);
+        // current path
+        const current_path = try std.process.currentPathAlloc(io, gpa);
+        defer gpa.free(current_path);
 
+        try print(stdout_writer, "\n{s}\n> ", .{current_path});
+
+        const result = try take_input(stdin_reader);
         var list = try parse.parse_command(gpa, result);
         defer list.deinit(gpa);
 
@@ -49,6 +53,9 @@ pub fn main(init: std.process.Init) !void {
                     shell.run_cd(gpa, environ_map, io, path) catch |err| {
                         std.log.err("{}", .{err});
                     };
+                },
+                .pwd => {
+                    try print(stdout_writer, "{s}\n", .{current_path});
                 },
                 else => {
                     std.log.err("builtin command \"{s}\" is not implemented yet.", .{list.items[0]});

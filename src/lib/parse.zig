@@ -5,6 +5,8 @@ const Allocator = std.mem.Allocator;
 pub const Builtins = enum {
     cd,
     exit,
+    pwd,
+    echo,
     placeholder,
 };
 
