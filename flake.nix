@@ -10,32 +10,40 @@
     in {
         devShells = forEachSystem (system: let
             pkgs = nixpkgs.legacyPackages.${system};
-            zig = zig-overlay.packages.${system}.master;
+            zig = zig-overlay.packages.${system}."0.16.0";
         in {
             default = pkgs.mkShell {
                 nativeBuildInputs = [
                     zig
                     pkgs.zls
                     pkgs.pkg-config
+                    pkgs.ffmpeg
+                ];
+
+                buildInputs = [
+                    pkgs.alsa-lib
                 ];
 
                 shellHook = ''
-                    echo "Welcome to Zig ($(zig version)) Dev Shell!"
+                    echo "Welcome to meowkey Dev Shell!"
                 '';
             };
         });
 
         packages = forEachSystem (system: let
             pkgs = nixpkgs.legacyPackages.${system};
-            zig = zig-overlay.packages.${system}.master;
+            zig = zig-overlay.packages.${system}."0.16.0";
         in {
             default = pkgs.stdenv.mkDerivation {
-                name = "zigect";
+                name = "meowkey";
                 src = ./.; 
                 nativeBuildInputs = [
                     zig
                     pkgs.pkg-config
                     pkgs.autoPatchelfHook
+                ];
+                buildInputs = [
+                    pkgs.alsa-lib
                 ];
                 dontConfigure = true;
                 buildPhase = ''
