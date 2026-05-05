@@ -32,8 +32,10 @@ pub fn main(init: std.process.Init) !void {
         // current path
         const current_path = try std.process.currentPathAlloc(io, gpa);
         defer gpa.free(current_path);
+        const processed_current_path = try utils.process_current_path_display(gpa, environ_map, current_path);
+        defer gpa.free(processed_current_path);
 
-        try print(stdout_writer, "\n{s}\n> ", .{current_path});
+        try print(stdout_writer, "\n{s}\n> ", .{processed_current_path});
 
         const result = try take_input(stdin_reader);
         var list = try parse.parse_command(gpa, result);
