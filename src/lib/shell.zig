@@ -36,6 +36,25 @@ fn process_cd_path(gpa: Allocator, env_map: *Environ_Map, path: ?[]const u8) !?[
     }
 }
 
+pub fn get_echo_val(env_map: *Environ_Map, arg: []const u8) []const u8 {
+    if(std.mem.startsWith(u8, arg, "$") and arg.len > 1) {
+        const env = env_map.get(arg[1..]);
+        if(env) |v| {
+            return v;
+        } else return arg;
+    }
+    else return arg;
+}
+
+test "run_echo" {
+    const gpa = std.testing.allocator;
+    var env_map = try std.testing.environ.createMap(gpa);
+    defer env_map.deinit();
+    const val = get_echo_val(&env_map, "$USER");
+    std.debug.print("echo val: {s}\n", .{val});
+}
+
+
 test "process_cd_path" {
     const gpa = std.testing.allocator;
     var env_map = try std.testing.environ.createMap(gpa);

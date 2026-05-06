@@ -59,6 +59,11 @@ pub fn main(init: std.process.Init) !void {
                 .pwd => {
                     try print(stdout_writer, "{s}\n", .{current_path});
                 },
+                .echo => {
+                    const arg = if(bt_arg.len > 0) bt_arg[0] else "";
+                    const val = shell.get_echo_val(environ_map, arg);
+                    try print(stdout_writer, "{s}\n", .{val});
+                },
                 else => {
                     std.log.err("builtin command \"{s}\" is not implemented yet.", .{list.items[0]});
                 },
